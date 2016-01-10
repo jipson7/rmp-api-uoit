@@ -14,10 +14,10 @@ def score_prof(name):
     if not isSearchResults(searchSoup):
         return 'No data', 404
     profURL = getProfileURL(searchSoup)
-    profSoup = getSoup(profURL)
-    return jsonify(createProfJSON(profSoup, name)), 200
+    return jsonify(createProfJSON(profURL, name)), 200
 
-def createProfJSON(soup, name):
+def createProfJSON(profURL, name):
+    soup = getSoup(profURL)
     grades = soup.find_all('div', {'class': 'grade'})[0:3]
     ratings = soup.find_all('div', {'class': 'rating'})[0:3]
     rating_count = soup.find('div', {'class': 'rating-count'})
@@ -31,7 +31,8 @@ def createProfJSON(soup, name):
             'helpfulness': ratings[0],
             'clarity': ratings[1],
             'easiness': ratings[2],
-            'num_ratings': rating_count.getText().strip()}
+            'num_ratings': rating_count.getText().strip(),
+            'profile_url': profURL}
 
 def getProfileURL(soup):
     prof = soup.find('li', {'class': 'listing PROFESSOR'})
