@@ -20,16 +20,18 @@ def score_prof(name):
 def createProfJSON(soup, name):
     grades = soup.find_all('div', {'class': 'grade'})[0:3]
     ratings = soup.find_all('div', {'class': 'rating'})[0:3]
+    rating_count = soup.find('div', {'class': 'rating-count'})
     hotness_image = ((grades.pop()).find('img')['src']).split('/')[-1]
     grades = [x.getText() for x in grades]
     ratings = [x.getText() for x in ratings]
     return {'name': ' '.join(name),
-            'overall score': grades[0],
-            'average grade': grades[1],
-            'hotness image': hotness_image,
+            'overall_score': grades[0],
+            'average_grade': grades[1],
+            'hotness_image': hotness_image,
             'helpfulness': ratings[0],
             'clarity': ratings[1],
-            'easiness': ratings[2]}
+            'easiness': ratings[2],
+            'num_ratings': rating_count.getText().strip()}
 
 def getProfileURL(soup):
     prof = soup.find('li', {'class': 'listing PROFESSOR'})
