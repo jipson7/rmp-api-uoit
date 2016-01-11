@@ -32,7 +32,16 @@ def createProfJSON(profURL, name):
             'clarity': ratings[1],
             'easiness': ratings[2],
             'num_ratings': rating_count.getText().strip(),
-            'profile_url': profURL}
+            'profile_url': profURL,
+            'salary': getSalary(name)}
+
+def getSalary(name):
+    sunshine = app.config['SUNSHINE']
+    for key, val in sunshine.items():
+        if ' '.join(name).upper() == key:
+            return val
+    return 'N/A'
+
 
 def getProfileURL(soup):
     prof = soup.find('li', {'class': 'listing PROFESSOR'})
