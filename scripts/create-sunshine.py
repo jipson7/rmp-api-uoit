@@ -20,13 +20,8 @@ for x in range(1, 5):
         cells = row.findAll('td')
         if UOIT not in cells[0].find('span'):
             continue
-        output_row = ''
-        for cell in cells:
-            if cell.find('span'):
-                data = cell.find('span').getText() +','
-            else:
-                data = cell.getText() + ','
-            output_row += data.strip()
+        cells = [x.getText().strip() for x in cells if not x.find('span')]
+        output_row = cells[1] + ' ' + cells[0] + '|' + cells[2]
         output_row += '\n'
         f.write(output_row)
 
