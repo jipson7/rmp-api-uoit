@@ -7,6 +7,44 @@ uoit = Blueprint('uoit', __name__)
 
 RMP_URL = "http://www.ratemyprofessors.com"
 
+@uoit.route('/profs', methods=['GET'])
+def getProfList():
+    URL_BASE = 'https://ssbp.mycampus.ca/prod/www_directory.directory_uoit.p_ShowDepartment?department_name_in='
+    DEPARTMENT_CODES = ['U1', 'U2', 'U3', 'U4', 'U7', '7519', '14111']
+    profs = set()
+    try:
+        for code in DEPARTMENT_CODES:
+            soup = getSoup(URL_BASE + code)
+            rows = soup.find_all('tr', {'class': 'regularText'})
+            for row in rows:
+                prof = row.find('a').getText().split()
+                prof = [name.strip() for name in prof]
+                if len(prof) > 2:
+                    profs.update(specialNameCase(prof))
+                profs.add(' '.join(prof))
+        return jsonify({'profs': list(profs)}), 200
+    except Exception as e:
+        print(e)
+        return 'No response from server for prof list'
+
+def specialNameCase(prof):
+    cases = set()
+    if '(' in prof[1]:
+        cases.add(prof[0] + ' ' + prof[2])
+        cases.add((prof[1])[1:-1] + ' ' + prof[2])
+    elif '(' in prof[2]:
+        cases.add(prof[0] + ' ' + prof[1])
+        cases.add(prof[0] + ' ' + (prof[2])[1:-1])
+    elif len(prof) == 3:
+        cases.add(prof[0] + ' ' + prof[1] + prof[2])
+        cases.add(prof[0] + ' ' + prof[2])
+    else:
+        cases.add(prof[0] + ' ' + ''.join(prof[1:]))
+        cases.add(prof[0] + ' ' + prof[1] + ' ' + ''.join(prof[2:]))
+        cases.add(prof[0] + ' ' + ''.join(prof[1:3]) + ' ' + prof[3])
+    return cases
+
+
 @uoit.route('/score/<name>', methods=['GET'])
 def score_prof(name):
     name = name.split()
