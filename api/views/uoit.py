@@ -48,6 +48,7 @@ def specialNameCase(prof):
 @uoit.route('/score/<name>', methods=['GET'])
 def score_prof(name):
     name = name.split()
+    name = [n.strip() for n in name]
     searchSoup = getSoup(createSearchURL(name))
     if not isSearchResults(searchSoup):
         return jsonify(createErrorJSON(name)), 404
@@ -63,11 +64,12 @@ def score_prof(name):
 def createErrorJSON(name, url=False):
     name = ' '.join(name).title()
     message = 'Professor ' + name + ' has not been rated yet.'
+    salary = getSalary(name)
     if not url:
         url = 'http://www.ratemyprofessors.com/teacher/create'
         message = ('Professor ' + name + ' does not yet exist on ' +
                    'Rate My Professor.')
-    return {'url': url, 'message': message}
+    return {'url': url, 'message': message, 'salary':salary}
 
 def createProfJSON(profURL, name):
     soup = getSoup(profURL)
