@@ -50,9 +50,24 @@ def score_prof(name):
     name = name.split()
     searchSoup = getSoup(createSearchURL(name))
     if not isSearchResults(searchSoup):
-        return 'No data', 404
+        return jsonify(createErrorJSON(name)), 404
     profURL = getProfileURL(searchSoup)
+    profSoup = getSoup(profURL)
+    firstReviewer = profSoup.find('div',
+                    text = re.compile('Be the first to rate'),
+                    attrs={'class':'headline'})
+    if firstReviewer:
+        return jsonify(createErrorJSON(name, profURL)), 404
     return jsonify(createProfJSON(profURL, name)), 200
+
+def createErrorJSON(name, url=False):
+    name = ' '.join(name).title()
+    message = 'Professor ' + name + ' has not been rated yet.'
+    if not url:
+        url = 'http://www.ratemyprofessors.com/teacher/create'
+        message = ('Professor ' + name + ' does not yet exist on ' +
+                   'Rate My Professor.')
+    return {'url': url, 'message': message}
 
 def createProfJSON(profURL, name):
     soup = getSoup(profURL)
