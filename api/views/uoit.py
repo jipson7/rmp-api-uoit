@@ -42,10 +42,15 @@ def score_prof(searchSoup):
 
 @uoit.route('/score/<name>', methods=['GET'])
 def try_score(name):
+    print(name)
     names = set()
     name = name.split()
     name = [n.strip() for n in name]
-    names.update(specialNameCase(name))
+    try:
+        names.update(specialNameCase(name))
+    except IndexError as e:
+        print(name)
+        raise
     names.add(' '.join(name))
 
     for test in names:
