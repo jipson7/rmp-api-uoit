@@ -7,6 +7,7 @@ uoit = Blueprint('uoit', __name__)
 
 RMP_URL = "http://www.ratemyprofessors.com"
 
+
 @uoit.route('/profs', methods=['GET'])
 def getProfList():
     URL_BASE = 'https://ssbp.mycampus.ca/prod/www_directory.directory_uoit.p_ShowDepartment?department_name_in='
@@ -27,31 +28,8 @@ def getProfList():
         print(e)
         return 'No response from server for prof list'
 
-def specialNameCase(prof):
-    cases = set()
-    if '(' in prof[1]:
-        cases.add(prof[0] + ' ' + prof[2])
-        cases.add((prof[1])[1:-1] + ' ' + prof[2])
-    elif '(' in prof[2]:
-        cases.add(prof[0] + ' ' + prof[1])
-        cases.add(prof[0] + ' ' + (prof[2])[1:-1])
-    elif len(prof) == 3:
-        cases.add(prof[0] + ' ' + prof[1] + prof[2])
-        cases.add(prof[0] + ' ' + prof[2])
-    else:
-        cases.add(prof[0] + ' ' + ''.join(prof[1:]))
-        cases.add(prof[0] + ' ' + prof[1] + ' ' + ''.join(prof[2:]))
-        cases.add(prof[0] + ' ' + ''.join(prof[1:3]) + ' ' + prof[3])
-    return cases
 
-
-@uoit.route('/score/<name>', methods=['GET'])
-def score_prof(name):
-    name = name.split()
-    name = [n.strip() for n in name]
-    searchSoup = getSoup(createSearchURL(name))
-    if not isSearchResults(searchSoup):
-        return jsonify(createErrorJSON(name)), 404
+def score_prof(searchSoup):
     profURL = getProfileURL(searchSoup)
     profSoup = getSoup(profURL)
     firstReviewer = profSoup.find('div',
@@ -60,6 +38,22 @@ def score_prof(name):
     if firstReviewer:
         return jsonify(createErrorJSON(name, profURL)), 404
     return jsonify(createProfJSON(profURL, name)), 200
+
+
+@uoit.route('/score/<name>', methods=['GET'])
+def try_score(name):
+    names = set()
+    name = name.split()
+    name = [n.strip() for n in name]
+    names.update(specialNameCase(name))
+    names.add(' '.join(name))
+
+    for test in names:
+        searchSoup = getSoup(createSearchURL(test.split()))
+        if isSearchResults(searchSoup):
+            score_prof(searchSoup)
+    return jsonify(createErrorJSON(name)), 404
+
 
 def createErrorJSON(name, url=False):
     name = ' '.join(name).title()
@@ -70,6 +64,7 @@ def createErrorJSON(name, url=False):
         message = ('Professor ' + name + ' does not yet exist on ' +
                    'Rate My Professor.')
     return {'url': url, 'message': message, 'salary':salary}
+
 
 def createProfJSON(profURL, name):
     soup = getSoup(profURL)
@@ -89,6 +84,7 @@ def createProfJSON(profURL, name):
             'num_ratings': rating_count.getText().strip(),
             'profile_url': profURL,
             'salary': getSalary(name)}
+
 
 def getSalary(name):
     sunshine = app.config['SUNSHINE']
@@ -111,6 +107,7 @@ def isSearchResults(soup):
                         attrs={'class': 'result-count'})
     return div is None
 
+
 def createSearchURL(nameList):
     searchURL = RMP_URL + ("/search.jsp?queryoption=HEADER"
     "&queryBy=teacherName&schoolName=University+of+Ontario"
@@ -118,5 +115,25 @@ def createSearchURL(nameList):
 
     return searchURL + '+'.join(nameList)
 
+
 def getSoup(url):
     return bs(urllib.request.urlopen(url).read(), 'html.parser')
+
+
+def specialNameCase(prof):
+    cases = set()
+    if '(' in prof[1]:
+        cases.add(prof[0] + ' ' + prof[2])
+        cases.add((prof[1])[1:-1] + ' ' + prof[2])
+    elif '(' in prof[2]:
+        cases.add(prof[0] + ' ' + prof[1])
+        cases.add(prof[0] + ' ' + (prof[2])[1:-1])
+    elif len(prof) == 3:
+        cases.add(prof[0] + ' ' + prof[1] + prof[2])
+        cases.add(prof[0] + ' ' + prof[2])
+    else:
+        cases.add(prof[0] + ' ' + ''.join(prof[1:]))
+        cases.add(prof[0] + ' ' + prof[1] + ' ' + ''.join(prof[2:]))
+        cases.add(prof[0] + ' ' + ''.join(prof[1:3]) + ' ' + prof[3])
+    return cases
+
