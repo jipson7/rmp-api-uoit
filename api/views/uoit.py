@@ -20,16 +20,14 @@ def getProfList():
             for row in rows:
                 prof = row.find('a').getText().split()
                 prof = [name.strip() for name in prof]
-                if len(prof) > 2:
-                    profs.update(specialNameCase(prof))
-                profs.add(' '.join(prof))
+                profs.update(specialNameCase(prof))
         return jsonify({'profs': list(profs)}), 200
     except Exception as e:
         print(e)
         return 'No response from server for prof list'
 
 
-def score_prof(searchSoup):
+def score_prof(searchSoup, name):
     profURL = getProfileURL(searchSoup)
     profSoup = getSoup(profURL)
     firstReviewer = profSoup.find('div',
@@ -46,17 +44,13 @@ def try_score(name):
     names = set()
     name = name.split()
     name = [n.strip() for n in name]
-    try:
-        names.update(specialNameCase(name))
-    except IndexError as e:
-        print(name)
-        raise
+    names.update(specialNameCase(name))
     names.add(' '.join(name))
 
     for test in names:
         searchSoup = getSoup(createSearchURL(test.split()))
         if isSearchResults(searchSoup):
-            score_prof(searchSoup)
+            return score_prof(searchSoup, name)
     return jsonify(createErrorJSON(name)), 404
 
 
@@ -127,7 +121,9 @@ def getSoup(url):
 
 def specialNameCase(prof):
     cases = set()
-    if '(' in prof[1]:
+    if len(prof) == 2:
+        cases.add(' '.join(prof))
+    elif '(' in prof[1]:
         cases.add(prof[0] + ' ' + prof[2])
         cases.add((prof[1])[1:-1] + ' ' + prof[2])
     elif '(' in prof[2]:
@@ -140,5 +136,6 @@ def specialNameCase(prof):
         cases.add(prof[0] + ' ' + ''.join(prof[1:]))
         cases.add(prof[0] + ' ' + prof[1] + ' ' + ''.join(prof[2:]))
         cases.add(prof[0] + ' ' + ''.join(prof[1:3]) + ' ' + prof[3])
+    cases.add(' '.join(prof))
     return cases
 
