@@ -42,10 +42,8 @@ def score_prof(searchSoup, name):
 def try_score(name):
     print(name)
     names = set()
-    name = name.split()
-    name = [n.strip() for n in name]
+    name = [n.strip() for n in name.split()]
     names.update(specialNameCase(name))
-    names.add(' '.join(name))
 
     for test in names:
         searchSoup = getSoup(createSearchURL(test.split()))
